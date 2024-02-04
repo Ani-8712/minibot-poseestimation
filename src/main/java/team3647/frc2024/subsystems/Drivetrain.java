@@ -1,22 +1,25 @@
 package team3647.frc2024.subsystems;
 
-import org.littletonrobotics.junction.LogTable;
-import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.inputs.LoggableInputs;
-
 import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-
-import edu.wpi.first.math.controller.ElevatorFeedforward;
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelPositions;
+import edu.wpi.first.wpilibj.ADIS16470_IMU;
+import edu.wpi.first.wpilibj.ADIS16470_IMU.IMUAxis;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive.WheelSpeeds;
+import org.littletonrobotics.junction.LogTable;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.inputs.LoggableInputs;
+import team3647.frc2024.Constants.DriveTrainConstants;
 import team3647.lib.PeriodicSubsystem;
 
 /**
  * defines fucntionality for drivetrain, what the drivetrain *can* do. This class impliments
- * periodicSubsystem, which is an abstract class that allows us to consolidate our outputs and
+ * periodicSubsystem, which is an interface class that allows us to consolidate our outputs and
  * inputs into seperate funcitons using writePeriodicOutputs and readPeriodicInputs, which are both
  * run in Periodic()(a function that runs repeatedly)
  *
@@ -27,6 +30,8 @@ public class Drivetrain implements PeriodicSubsystem {
     private final TalonFX left;
     private final TalonFX right;
 
+    private final DifferentialDriveOdometry odo;
+
     /**
      * DutyCycleOut is the control request for open loop (see
      * https://v6.docs.ctr-electronics.com/en/2023-v6/docs/api-reference/api-usage/control-requests.html)
@@ -35,12 +40,21 @@ public class Drivetrain implements PeriodicSubsystem {
 
     private final DutyCycleOut rightDutycycle = new DutyCycleOut(0);
 
+    private final ADIS16470_IMU gyro;
+
     // periodicIO consolidates the measured input and output values
     private final PeriodicIO periodicIO = new PeriodicIO();
 
-    public Drivetrain(TalonFX left, TalonFX right) {
+    public Drivetrain(TalonFX left, TalonFX right, ADIS16470_IMU gyro) {
         this.left = left;
         this.right = right;
+        this.gyro = gyro;
+
+        this.odo =
+                new DifferentialDriveOdometry(
+                        Rotation2d.fromDegrees(this.gyro.getAngle(IMUAxis.kYaw)),
+                        getLeftMeters(),
+                        getRightMeters());
     }
 
     public void drive(double forward, double rotation) {
@@ -52,6 +66,8 @@ public class Drivetrain implements PeriodicSubsystem {
          */
         WheelSpeeds ws = DifferentialDrive.arcadeDriveIK(forward, rotation, false);
         setOpenloop(ws.left, ws.right);
+        Logger.recordOutput("Drive/forward", forward);
+        Logger.recordOutput("Drive/Rotation", rotation);
     }
 
     public void setOpenloop(double leftOutput, double rightOutput) {
@@ -65,9 +81,16 @@ public class Drivetrain implements PeriodicSubsystem {
 
         Logger.recordOutput("leftOut", leftOutput);
         Logger.recordOutput("right output", rightOutput);
-        
+    }
 
-        
+    public void calibrateGyro() {
+        for (int i = 0; i < 1; i++) {
+            this.gyro.calibrate();
+        }
+    }
+
+    public void zeroGyro() {
+        this.gyro.reset();
     }
 
     @Override
@@ -79,12 +102,31 @@ public class Drivetrain implements PeriodicSubsystem {
 
     @Override
     public void readPeriodicInputs() {
-        periodicIO.inputs.leftVoltage = this.left.getMotorVoltage().getValue();
-        periodicIO.inputs.rightVoltage = this.right.getMotorVoltage().getValue();
-        periodicIO.inputs.leftOpenLoop = periodicIO.inputs.leftVoltage / periodicIO.nominalVoltage;
-        periodicIO.inputs.rightOpenLoop = periodicIO.inputs.rightVoltage / periodicIO.nominalVoltage;
         periodicIO.inputs.leftVel = this.left.getVelocity().getValue();
         periodicIO.inputs.rightVel = this.left.getVelocity().getValue();
+        periodicIO.inputs.gyroAngle = this.gyro.getAngle(IMUAxis.kYaw);
+        periodicIO.inputs.odoPose =
+                this.odo.update(
+                        Rotation2d.fromDegrees(periodicIO.inputs.gyroAngle),
+                        new DifferentialDriveWheelPositions(getLeftMeters(), getRightMeters()));
+
+        Logger.processInputs("Drive/Inputs", periodicIO.inputs);
+    }
+
+    public double getRightMeters() {
+        return this.left.getPosition().getValue()
+                * DriveTrainConstants.driveGearRatio
+                * DriveTrainConstants.kWheelRadius
+                * 2
+                * Math.PI;
+    }
+
+    public double getLeftMeters() {
+        return this.right.getPosition().getValue()
+                * DriveTrainConstants.driveGearRatio
+                * DriveTrainConstants.kWheelRadius
+                * 2
+                * Math.PI;
     }
 
     public static class PeriodicIO {
@@ -96,36 +138,29 @@ public class Drivetrain implements PeriodicSubsystem {
 
         public Inputs inputs = new Inputs();
 
-        
-
-
-        public class Inputs implements LoggableInputs{
+        public class Inputs implements LoggableInputs {
             @Override
             public void toLog(LogTable table) {
-                table.put("leftVoltage", leftVoltage);
-                table.put("rightVoltage", rightVoltage);
-                table.put("leftOpenLoop", leftOpenLoop);
-                table.put("rightopenloop", rightOpenLoop);
+                table.put("rightVel", rightVel);
                 table.put("leftvel", leftVel);
-
+                table.put("gyroAngle", gyroAngle);
+                table.put("odo pose", odoPose);
             }
+
             @Override
             public void fromLog(LogTable table) {
-                leftVel = table.get("leftvel", 0);
-                rightVel = table.get("right velocity", 0);
-
-                
+                rightVel = table.get("rightVel", -1);
+                leftVel = table.get("leftvel", -1);
+                gyroAngle = table.get("gyroAngle", -1);
+                odoPose = table.get("odo pose", new Pose2d(-1,-1,Rotation2d.fromDegrees(-1)));
             }
-
-            public double leftVoltage = 0;
-            public double rightVoltage = 0;
 
             public double leftVel = 0;
             public double rightVel = 0;
 
-            public double leftOpenLoop = 0;
-            public double rightOpenLoop = 0;
+            public double gyroAngle = 0;
 
+            public Pose2d odoPose = new Pose2d();
         }
     }
 

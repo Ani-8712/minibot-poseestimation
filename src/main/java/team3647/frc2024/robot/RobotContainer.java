@@ -1,5 +1,6 @@
 package team3647.frc2024.robot;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import team3647.frc2024.Constants.DriveTrainConstants;
 import team3647.frc2024.commands.DrivetrainCommands;
@@ -13,13 +14,16 @@ import team3647.lib.inputs.Joysticks;
  */
 public class RobotContainer {
 
-    private final Drivetrain drivetrain =
-            new Drivetrain(DriveTrainConstants.kLeftMotor, DriveTrainConstants.kRightMotor);
+    public final Drivetrain drivetrain =
+            new Drivetrain(
+                    DriveTrainConstants.kLeftMotor,
+                    DriveTrainConstants.kRightMotor,
+                    DriveTrainConstants.gyro);
     // we use the custom Joysticks class for our input, (NOT THE BUILT-IN JOYSTICK CLASS) so we need
     // to copy it from aother robot's code
     private final Joysticks mainController = new Joysticks(0);
 
-    private final DrivetrainCommands drivetrainCommands = new DrivetrainCommands(drivetrain);
+    public final DrivetrainCommands drivetrainCommands = new DrivetrainCommands(drivetrain);
 
     public RobotContainer() {
         // It is necessary to register all subsysems with the command scheduler, so it knows what
@@ -33,7 +37,6 @@ public class RobotContainer {
         mainController.buttonX.whileTrue(drivetrainCommands.intakeHandoff(() -> 0.5));
         mainController.buttonY.whileTrue(drivetrainCommands.shoot(() -> 1));
 
-        
         /**
          * The code below is an example of how to set a command to a button on the controller.
          * Notice how it uses the same subsystem as the default command we set above. When I am
@@ -48,5 +51,8 @@ public class RobotContainer {
                 drivetrainCommands.drive(
                         () -> mainController.getLeftStickY() * 0.1,
                         () -> mainController.getRightStickX() * 0.1));
+
+        drivetrain.calibrateGyro();
+        SmartDashboard.putData("zero gyro", drivetrainCommands.zeroGyro());
     }
 }
