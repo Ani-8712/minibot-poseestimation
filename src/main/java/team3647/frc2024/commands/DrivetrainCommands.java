@@ -3,9 +3,10 @@ package team3647.frc2024.commands;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import team3647.frc2024.subsystems.Drivetrain;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import java.util.function.DoubleSupplier;
+import team3647.frc2024.subsystems.Drivetrain;
 
 /**
  * We use the commands class to define everything we are *going* to do with the subystem. For
@@ -39,11 +40,18 @@ public class DrivetrainCommands {
                 drivetrain);
     }
 
-    public Command shoot(DoubleSupplier speed){
-        return Commands.run(() -> drivetrain.setOpenloop(speed.getAsDouble(), -speed.getAsDouble()), drivetrain);
+    public Command shoot(DoubleSupplier speed) {
+        return Commands.run(
+                () -> drivetrain.setOpenloop(speed.getAsDouble(), -speed.getAsDouble()),
+                drivetrain);
     }
 
-    public Command intakeHandoff(DoubleSupplier output){
-        return Commands.run(() -> drivetrain.setOpenloop(output.getAsDouble(), output.getAsDouble()), drivetrain);
+    public Command intakeHandoff(DoubleSupplier output) {
+        return Commands.run(
+                () -> drivetrain.setOpenloop(output.getAsDouble(), output.getAsDouble()),
+                drivetrain);
     }
+
+    
+    
 }

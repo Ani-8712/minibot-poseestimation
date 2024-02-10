@@ -1,38 +1,40 @@
 package team3647.frc2024.Constants;
 
-import javax.swing.filechooser.FileNameExtensionFilter;
+import com.revrobotics.CANSparkBase.IdleMode;
+import com.revrobotics.CANSparkLowLevel.MotorType;
+import com.revrobotics.CANSparkMax;
 
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.configs.TalonFXConfigurator;
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
+import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.ADIS16470_IMU;
 
 public class DriveTrainConstants {
-    // Declares the 2 motors. the deviceID is the can ID of the device, and can be cheked in Phoenix
-    // tuner.
-    public static final TalonFX kLeftMotor = new TalonFX(20);
-    public static final TalonFX kRightMotor = new TalonFX(32);
+    // Declares the 2 motors. the deviceID is the can ID of the device, and can be cheked in Rev
+    // Hardware Cilent
+    // The motorType for NEOs is kBrushless
+    public static final CANSparkMax kLeftMotor = new CANSparkMax(5, MotorType.kBrushless);
+    public static final CANSparkMax kRightMotor = new CANSparkMax(4, MotorType.kBrushless);
+
+    public static final ADIS16470_IMU gyro = new ADIS16470_IMU();
 
     public static final double kNominalVoltage = 12;
 
+    public static final double kTrackWidth = 0;
 
-    // creates configuraTOR object that you apply configs to
-    private static final TalonFXConfigurator kleftConfigurator = kLeftMotor.getConfigurator();
-    private static final TalonFXConfigurator krightConfigurator = kRightMotor.getConfigurator();
+    public static final double kMotorRotToWheelRot = 60 / 14;
 
-    // Creates configuraTION objects that hold the configs for each motor
-    private static final TalonFXConfiguration configRight = new TalonFXConfiguration();
-    private static final TalonFXConfiguration configLeft = new TalonFXConfiguration();
+    public static final double kWheelRadiusM = Units.inchesToMeters(4);
 
-    // The properties of these configuraTION objects are set and applied to the ConfiguraTORs
-    // static means it always runs when built
+    public static final double motorRotationsToDistM =
+            kMotorRotToWheelRot * kWheelRadiusM * 2 * Math.PI;
+
+    public static final DifferentialDriveKinematics kinematics =
+        new DifferentialDriveKinematics(kTrackWidth);
+
     static {
-        configRight.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        configLeft.MotorOutput.Inverted  = InvertedValue.Clockwise_Positive;
-        configRight.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        configLeft.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        kleftConfigurator.apply(configLeft);
-        krightConfigurator.apply(configRight);
+        kRightMotor.setInverted(true);
+        kLeftMotor.setIdleMode(IdleMode.kBrake);
+        kRightMotor.setIdleMode(IdleMode.kBrake);
     }
 }

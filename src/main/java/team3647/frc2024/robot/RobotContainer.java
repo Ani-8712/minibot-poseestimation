@@ -14,26 +14,32 @@ import team3647.lib.inputs.Joysticks;
 public class RobotContainer {
 
     private final Drivetrain drivetrain =
-            new Drivetrain(DriveTrainConstants.kLeftMotor, DriveTrainConstants.kRightMotor);
+            new Drivetrain(
+                    DriveTrainConstants.kLeftMotor,
+                    DriveTrainConstants.kRightMotor,
+                    DriveTrainConstants.gyro,
+                    DriveTrainConstants.kinematics);
     // we use the custom Joysticks class for our input, (NOT THE BUILT-IN JOYSTICK CLASS) so we need
     // to copy it from aother robot's code
     private final Joysticks mainController = new Joysticks(0);
 
     private final DrivetrainCommands drivetrainCommands = new DrivetrainCommands(drivetrain);
 
+    
     public RobotContainer() {
         // It is necessary to register all subsysems with the command scheduler, so it knows what
         // they are.
         CommandScheduler.getInstance().registerSubsystem(drivetrain);
 
         drivetrain.setDefaultCommand(
-                drivetrainCommands.intakeHandoff(mainController::getLeftTriggerValue));
-
+                drivetrainCommands.drive(mainController::getLeftStickY, mainController::getRightStickX));
+        
+        drivetrain.calibrateGyro();
+        
         mainController.buttonA.whileTrue(drivetrainCommands.shoot(() -> 0.7));
         mainController.buttonX.whileTrue(drivetrainCommands.intakeHandoff(() -> 0.5));
         mainController.buttonY.whileTrue(drivetrainCommands.shoot(() -> 1));
 
-        
         /**
          * The code below is an example of how to set a command to a button on the controller.
          * Notice how it uses the same subsystem as the default command we set above. When I am

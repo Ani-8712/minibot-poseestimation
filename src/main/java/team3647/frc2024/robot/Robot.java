@@ -4,6 +4,9 @@
 
 package team3647.frc2024.robot;
 
+import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -11,25 +14,16 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
-import edu.wpi.first.wpilibj.PowerDistribution;
-import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
-import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
-
 /**
- * The VM is configured to automatically run this class, and to call the
- * functions corresponding to
- * each mode, as described in the TimedRobot documentation. If you change the
- * name of this class or
- * the package after creating this project, you must also update the manifest
- * file in the resource
+ * The VM is configured to automatically run this class, and to call the functions corresponding to
+ * each mode, as described in the TimedRobot documentation. If you change the name of this class or
+ * the package after creating this project, you must also update the manifest file in the resource
  * directory.
  */
 public class Robot extends LoggedRobot {
 
     /**
-     * This function is run when the robot is first started up and should be used
-     * for any
+     * This function is run when the robot is first started up and should be used for any
      * initialization code.
      */
     public RobotContainer rb = new RobotContainer();
@@ -44,17 +38,23 @@ public class Robot extends LoggedRobot {
             new PowerDistribution(1, ModuleType.kRev); // Enables power distribution logging
         } else {
             setUseTiming(false); // Run as fast as possible
-            String logPath = LogFileUtil.findReplayLog(); // Pull the replay log from AdvantageScope (or prompt the
-                                                          // user)
+            String logPath =
+                    LogFileUtil
+                            .findReplayLog(); // Pull the replay log from AdvantageScope (or prompt
+            // the
+            // user)
             Logger.setReplaySource(new WPILOGReader(logPath)); // Read replay log
-            Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"))); // Save outputs to a
-                                                                                                  // new log
+            Logger.addDataReceiver(
+                    new WPILOGWriter(
+                            LogFileUtil.addPathSuffix(logPath, "_sim"))); // Save outputs to a
+            // new log
         }
 
         // Logger.disableDeterministicTimestamps() // See "Deterministic Timestamps" in
         // the "Understanding Data Flow" page
-        Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may
-                        // be added.
+        Logger.start(); // Start logging! No more data receivers, replay sources, or metadata
+        // values may
+        // be added.
     }
 
     @Override
@@ -64,25 +64,19 @@ public class Robot extends LoggedRobot {
 
     /** This function is run once each time the robot enters autonomous mode. */
     @Override
-    public void autonomousInit() {
-    }
+    public void autonomousInit() {}
 
     /** This function is called periodically during autonomous. */
     @Override
-    public void autonomousPeriodic() {
-    }
+    public void autonomousPeriodic() {}
 
-    /**
-     * This function is called once each time the robot enters teleoperated mode.
-     */
+    /** This function is called once each time the robot enters teleoperated mode. */
     @Override
-    public void teleopInit() {
-    }
+    public void teleopInit() {}
 
     /** This function is called periodically during teleoperated mode. */
     @Override
-    public void teleopPeriodic() {
-    }
+    public void teleopPeriodic() {}
 
     /** This function is called once each time the robot enters test mode. */
     @Override
@@ -92,6 +86,5 @@ public class Robot extends LoggedRobot {
 
     /** This function is called periodically during test mode. */
     @Override
-    public void testPeriodic() {
-    }
+    public void testPeriodic() {}
 }
