@@ -3,8 +3,6 @@ package team3647.frc2024.Constants;
 import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
-
-import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
@@ -22,18 +20,18 @@ public class DriveTrainConstants {
 
     public static final double kTrackWidth = 0;
 
-    public static final double kMotorRotToWheelRot = 60 / 14;
+    public static final double kMotorRotToWheelRot = 12 / 60.0;
 
-    public static final double kWheelRadiusM = Units.inchesToMeters(4);
+    public static final double kWheelDiameterM = Units.inchesToMeters(4);
 
-    public static final double motorRotationsToDistM =
-            kMotorRotToWheelRot * kWheelRadiusM * 2 * Math.PI;
+    public static final double kMotorRotationsToDistM =
+            kMotorRotToWheelRot * kWheelDiameterM * Math.PI;
 
     public static final DifferentialDriveKinematics kinematics =
-        new DifferentialDriveKinematics(kTrackWidth);
+            new DifferentialDriveKinematics(kTrackWidth);
 
     static {
-        kRightMotor.setInverted(true);
+        kRightMotor.setInverted(false);
         kLeftMotor.setIdleMode(IdleMode.kBrake);
         kRightMotor.setIdleMode(IdleMode.kBrake);
     }

@@ -25,17 +25,17 @@ public class RobotContainer {
 
     private final DrivetrainCommands drivetrainCommands = new DrivetrainCommands(drivetrain);
 
-    
     public RobotContainer() {
         // It is necessary to register all subsysems with the command scheduler, so it knows what
         // they are.
         CommandScheduler.getInstance().registerSubsystem(drivetrain);
 
         drivetrain.setDefaultCommand(
-                drivetrainCommands.drive(mainController::getLeftStickY, mainController::getRightStickX));
-        
+                drivetrainCommands.drive(
+                        mainController::getLeftStickY, mainController::getRightStickX));
+
         drivetrain.calibrateGyro();
-        
+
         mainController.buttonA.whileTrue(drivetrainCommands.shoot(() -> 0.7));
         mainController.buttonX.whileTrue(drivetrainCommands.intakeHandoff(() -> 0.5));
         mainController.buttonY.whileTrue(drivetrainCommands.shoot(() -> 1));
