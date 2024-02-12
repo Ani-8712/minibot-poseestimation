@@ -1,12 +1,21 @@
 package team3647.frc2024.subsystems;
 
 import com.revrobotics.CANSparkMax;
+
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelPositions;
+import edu.wpi.first.math.kinematics.Odometry;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.ADIS16470_IMU.IMUAxis;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive.WheelSpeeds;
@@ -15,7 +24,11 @@ import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 import team3647.frc2024.Constants.DriveTrainConstants;
+import team3647.frc2024.util.VisionData;
+import team3647.lib.GeomUtil;
+import team3647.lib.LimelightHelpers;
 import team3647.lib.PeriodicSubsystem;
+import team3647.lib.LimelightHelpers.LimelightResults;
 
 /**
  * defines fucntionality for drivetrain, what the drivetrain *can* do. This class impliments
@@ -38,6 +51,8 @@ public class Drivetrain implements PeriodicSubsystem {
     // periodicIO consolidates the measured input and output values
     private final PeriodicIO periodicIO = new PeriodicIO();
 
+    private final AprilTagFieldLayout layout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
+
     public Drivetrain(
             CANSparkMax left,
             CANSparkMax right,
@@ -46,7 +61,7 @@ public class Drivetrain implements PeriodicSubsystem {
         this.left = left;
         this.right = right;
         this.gyro = gyro;
-        SmartDashboard.putNumber("balls", getRightDistM());
+        
         estimator =
                 new DifferentialDrivePoseEstimator(
                         kinematics,
@@ -78,48 +93,59 @@ public class Drivetrain implements PeriodicSubsystem {
         Logger.recordOutput("right output", rightOutput);
     }
 
+    public void addVisionData(VisionData data){
+        periodicIO.visionPose = data.pose;
+        this.estimator.addVisionMeasurement(data.pose, data.timestamp, data.stdDevs);
+    }
+
+    public void addVisionData(Pose2d pose, double timestamp, Matrix<N3, N1> stdDevs){
+        var data = new VisionData(pose, timestamp, stdDevs);
+        addVisionData(data);
+        
+    }
+
     public void calibrateGyro() {
         this.gyro.calibrate();
     }
 
     public double getRightDistM() {
-        return right.getEncoder().getPosition() * DriveTrainConstants.kMotorRotationsToDistM;
+        return periodicIO.rightDistM;
     }
 
     public double getLeftDistM() {
-        return periodicIO.inputs.leftDistM;
+        return periodicIO.leftDistM;
     }
 
     public double getYaw() {
-        return periodicIO.inputs.yaw;
+        return periodicIO.yaw;
     }
 
     public double getPitch() {
-        return periodicIO.inputs.pitch;
+        return periodicIO.pitch;
     }
 
     public double getRoll() {
-        return periodicIO.inputs.roll;
+        return periodicIO.roll;
     }
 
     public double getRightVoltage() {
-        return periodicIO.inputs.rightVoltage;
+        return periodicIO.rightVoltage;
     }
 
     public double getLeftVoltage() {
-        return periodicIO.inputs.leftVoltage;
+        return periodicIO.leftVoltage;
     }
 
     public double getLeftCurrent() {
-        return periodicIO.inputs.leftCurrent;
+        return periodicIO.leftCurrent;
     }
 
     public double getRightCurrent() {
-        return periodicIO.inputs.rightCurrent;
+        return periodicIO.rightCurrent;
     }
 
     public double getAvgCurrent() {
-        return periodicIO.inputs.avgCurrent;
+        return periodicIO.avgCurrent;
     }
 
     @Override
@@ -131,96 +157,113 @@ public class Drivetrain implements PeriodicSubsystem {
 
     @Override
     public void readPeriodicInputs() {
-        periodicIO.inputs.leftVoltage = this.left.getBusVoltage();
-        periodicIO.inputs.rightVoltage = this.right.getBusVoltage();
+        periodicIO.leftVoltage = this.left.getBusVoltage();
+        periodicIO.rightVoltage = this.right.getBusVoltage();
 
-        periodicIO.inputs.leftVel = this.left.getEncoder().getVelocity();
-        periodicIO.inputs.rightVel = this.left.getEncoder().getVelocity();
+        periodicIO.leftVel = this.left.getEncoder().getVelocity();
+        periodicIO.rightVel = this.left.getEncoder().getVelocity();
 
-        periodicIO.inputs.yaw = this.gyro.getAngle(IMUAxis.kYaw);
-        periodicIO.inputs.pitch = this.gyro.getAngle(IMUAxis.kPitch);
-        periodicIO.inputs.roll = this.gyro.getAngle(IMUAxis.kRoll);
-        periodicIO.inputs.leftCurrent = left.getOutputCurrent();
-        periodicIO.inputs.rightCurrent = right.getOutputCurrent();
-        periodicIO.inputs.avgCurrent = (right.getOutputCurrent() + left.getOutputCurrent()) / 2;
+        periodicIO.yaw = this.gyro.getAngle(IMUAxis.kYaw);
+        periodicIO.pitch = this.gyro.getAngle(IMUAxis.kPitch);
+        periodicIO.roll = this.gyro.getAngle(IMUAxis.kRoll);
+        periodicIO.leftCurrent = left.getOutputCurrent();
+        periodicIO.rightCurrent = right.getOutputCurrent();
+        periodicIO.avgCurrent = (right.getOutputCurrent() + left.getOutputCurrent()) / 2;
 
-        periodicIO.inputs.rightDistM =
+        periodicIO.rightDistM =
                 right.getEncoder().getPosition() * DriveTrainConstants.kMotorRotationsToDistM;
-        periodicIO.inputs.leftDistM =
+        periodicIO.leftDistM =
                 left.getEncoder().getPosition() * DriveTrainConstants.kMotorRotationsToDistM;
 
-        periodicIO.inputs.leftNativePos = left.getEncoder().getPosition();
-        periodicIO.inputs.rightNativePos = right.getEncoder().getPosition();
+        periodicIO.leftNativePos = left.getEncoder().getPosition();
+        periodicIO.rightNativePos = right.getEncoder().getPosition();
+
+        periodicIO.timestamp = Timer.getFPGATimestamp();
 
         this.estimator.update(
                 Rotation2d.fromDegrees(getYaw()),
                 new DifferentialDriveWheelPositions(getLeftDistM(), getRightDistM()));
-        periodicIO.inputs.odoPose = this.estimator.getEstimatedPosition();
+        periodicIO.odoPose = this.estimator.getEstimatedPosition();
 
-        Logger.processInputs("Drive/inputs", periodicIO.inputs);
+        periodicIO.stdDevsScalar = 
+            GeomUtil.distance(this.layout.getTagPose((int)(LimelightHelpers.getFiducialID(""))).get().toPose2d(), 
+            periodicIO.visionPose);
+        
+        addVisionData(LimelightHelpers.getBotPose2d(""), 
+                    periodicIO.timestamp,
+                    VecBuilder.fill(0.005,0.005, 0.005)
+                    .times(periodicIO.stdDevsScalar));
+
+        Logger.processInputs("Drive/inputs", periodicIO);
     }
 
-    public static class PeriodicIO {
+    public static class PeriodicIO implements LoggableInputs {
         public double feedforward = 1;
         public double nominalVoltage = 12;
         public double leftOutput;
         public double rightOutput;
 
-        public Inputs inputs = new Inputs();
+        public double stdDevsScalar = 1;
 
-        public class Inputs implements LoggableInputs {
-            @Override
-            public void toLog(LogTable table) {
-                table.put("leftVoltage", leftVoltage);
-                table.put("rightVoltage", rightVoltage);
-                table.put("leftOpenLoop", leftOpenLoop);
-                table.put("rightopenloop", rightOpenLoop);
-                table.put("leftvel", leftVel);
-                table.put("yaw", yaw);
-                table.put("pitch", pitch);
-                table.put("roll", roll);
-                table.put("current pose", odoPose);
-                table.put("leftCurrent", leftCurrent);
-                table.put("rightcurret", rightCurrent);
-                table.put("right distance m", rightDistM);
-                table.put("chill", leftDistM);
-                table.put("rigthNativePos", rightNativePos);
-                table.put("left nat pos", leftNativePos);
-            }
+  
 
-            @Override
-            public void fromLog(LogTable table) {
-                leftVel = table.get("leftvel", -1);
-                rightVel = table.get("right velocity", -1);
-            }
-
-            public double leftVoltage = 0;
-            public double rightVoltage = 0;
-
-            public double leftVel = 0;
-            public double rightVel = 0;
-
-            public double leftOpenLoop = 0;
-            public double rightOpenLoop = 0;
-
-            public double timestamp = 0;
-
-            public double rightCurrent = 0;
-            public double leftCurrent = 0;
-            public double avgCurrent = 0;
-
-            public double yaw = 0;
-            public double pitch = 0;
-            public double roll = 0;
-
-            public double rightDistM = 0;
-            public double leftDistM = 0;
-
-            public double leftNativePos = 0;
-            public double rightNativePos = 0;
-
-            public Pose2d odoPose = new Pose2d();
+        @Override
+        public void toLog(LogTable table) {
+            table.put("leftVoltage", leftVoltage);
+            table.put("rightVoltage", rightVoltage);
+            table.put("leftOpenLoop", leftOpenLoop);
+            table.put("rightopenloop", rightOpenLoop);
+            table.put("leftvel", leftVel);
+            table.put("yaw", yaw);
+            table.put("pitch", pitch);
+            table.put("roll", roll);
+            table.put("odo pose", odoPose);
+            table.put("vision pose", visionPose);
+            table.put("leftCurrent", leftCurrent);
+            table.put("rightcurret", rightCurrent);
+            table.put("right distance m", rightDistM);
+            table.put("chill", leftDistM);
+            table.put("rigthNativePos", rightNativePos);
+            table.put("left nat pos", leftNativePos);
         }
+
+        @Override
+        public void fromLog(LogTable table) {
+            leftVel = table.get("leftvel", -1);
+            rightVel = table.get("right velocity", -1);
+        }
+
+        public double leftVoltage = 0;
+        public double rightVoltage = 0;
+
+        public double leftVel = 0;
+        public double rightVel = 0;
+
+        public double leftOpenLoop = 0;
+        public double rightOpenLoop = 0;
+
+        public double timestamp = 0;
+
+        public double rightCurrent = 0;
+        public double leftCurrent = 0;
+        public double avgCurrent = 0;
+
+        public double yaw = 0;
+        public double pitch = 0;
+        public double roll = 0;
+
+        public double rightDistM = 0;
+        public double leftDistM = 0;
+
+        public double leftNativePos = 0;
+        public double rightNativePos = 0;
+
+        public Pose2d odoPose = new Pose2d();
+
+        public Pose2d visionPose = new Pose2d();
+
+
+
     }
 
     @Override

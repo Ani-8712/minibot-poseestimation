@@ -4,7 +4,7 @@ import java.util.Optional;
 
 /** AprilTagCamera */
 public interface AprilTagCamera {
-    public Optional<VisionMeasurement> queueToInputs();
+    public Optional<VisionData> queueToInputs();
 
     public int getTagNum();
 }
