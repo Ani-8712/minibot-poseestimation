@@ -1,6 +1,8 @@
 package team3647.frc2024.subsystems;
 
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.SparkPIDController;
+import com.revrobotics.CANSparkBase.ControlType;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -42,6 +44,8 @@ import team3647.lib.LimelightHelpers.LimelightResults;
 public class Drivetrain implements PeriodicSubsystem {
     private final CANSparkMax left;
     private final CANSparkMax right;
+    private final SparkPIDController leftController;
+    private final SparkPIDController rightController;
 
     private final ADIS16470_IMU gyro;
 
@@ -61,6 +65,9 @@ public class Drivetrain implements PeriodicSubsystem {
         this.left = left;
         this.right = right;
         this.gyro = gyro;
+        this.leftController = left.getPIDController();
+        this.rightController = right.getPIDController();
+        
         
         estimator =
                 new DifferentialDrivePoseEstimator(
@@ -71,7 +78,7 @@ public class Drivetrain implements PeriodicSubsystem {
                         initialPose);
     }
 
-    public void drive(double forward, double rotation) {
+    public void drive(double forward, double rotation, boolean isOpenLoop) {
         /**
          * wheelspeeds represents the speeds of eaach wheel/motor in a differential drive. it takes
          * left and right speed arcadeDriveIK creates wheelspeeds with a forward and rotaion
@@ -79,28 +86,44 @@ public class Drivetrain implements PeriodicSubsystem {
          * and subtracing rotation from forward for left.
          */
         WheelSpeeds ws = DifferentialDrive.arcadeDriveIK(forward, rotation, false);
-        setOpenloop(ws.left, ws.right);
+        
+        if(isOpenLoop){
+            setOpenloop(ws.left, ws.right);
+        }else{
+            setVelocity(ws.left, ws.right);
+        }
+
         Logger.recordOutput("drive/arcadeForward", forward);
         Logger.recordOutput("drive/arcadeRot", rotation);
     }
+
+    public void setVelocity(double leftVel, double rightVel){
+        periodicIO.leftOutput = leftVel;
+        periodicIO.rightOutput = rightVel;
+        periodicIO.controlMode = ControlType.kDutyCycle;
+
+        Logger.recordOutput("Drive/ leftvel", leftVel);
+        Logger.recordOutput("drive/rightvel", rightVel);
+    }
+    
 
     public void setOpenloop(double leftOutput, double rightOutput) {
         // sets values of rightoutput
         periodicIO.leftOutput = leftOutput;
         periodicIO.rightOutput = rightOutput;
+        periodicIO.controlMode = ControlType.kDutyCycle;
 
-        Logger.recordOutput("leftOut", leftOutput);
-        Logger.recordOutput("right output", rightOutput);
+        Logger.recordOutput("leftOpenLoop", leftOutput);
+        Logger.recordOutput("right open loop", rightOutput);
     }
 
     public void addVisionData(VisionData data){
-        periodicIO.visionPose = data.pose;
-        this.estimator.addVisionMeasurement(data.pose, data.timestamp, data.stdDevs);
+        addVisionData(data.pose, data.timestamp, data.stdDevs);
     }
 
     public void addVisionData(Pose2d pose, double timestamp, Matrix<N3, N1> stdDevs){
-        var data = new VisionData(pose, timestamp, stdDevs);
-        addVisionData(data);
+        periodicIO.visionPose = pose;
+        this.estimator.addVisionMeasurement(pose, timestamp, stdDevs);
         
     }
 
@@ -151,8 +174,8 @@ public class Drivetrain implements PeriodicSubsystem {
     @Override
     public void writePeriodicOutputs() {
         // setControl() takes a controlRequest Object and applies it's output to the motor
-        this.left.set(periodicIO.leftOutput);
-        this.right.set(periodicIO.rightOutput);
+        this.leftController.setReference(periodicIO.leftOutput, periodicIO.controlMode);
+        this.rightController.setReference(periodicIO.rightOutput, periodicIO.controlMode);
     }
 
     @Override
@@ -202,6 +225,7 @@ public class Drivetrain implements PeriodicSubsystem {
         public double nominalVoltage = 12;
         public double leftOutput;
         public double rightOutput;
+        public ControlType controlMode;
 
         public double stdDevsScalar = 1;
 

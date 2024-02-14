@@ -22,6 +22,9 @@ public class DriveTrainConstants {
 
     public static final double kMotorRotToWheelRot = 12 / 60.0;
 
+    public static final double kDriveP = 0.5;
+    public static final double kDriveI = 0;
+    public static final double kDriveD = 0;
     public static final double kWheelDiameterM = Units.inchesToMeters(4);
 
     public static final double kMotorRotationsToDistM =
@@ -34,5 +37,13 @@ public class DriveTrainConstants {
         kRightMotor.setInverted(false);
         kLeftMotor.setIdleMode(IdleMode.kBrake);
         kRightMotor.setIdleMode(IdleMode.kBrake);
+
+        kLeftMotor.getPIDController().setP(kDriveP);
+        kLeftMotor.getPIDController().setI(kDriveI);
+        kLeftMotor.getPIDController().setD(kDriveD);
+
+        kRightMotor.getPIDController().setP(kDriveP);
+        kRightMotor.getPIDController().setI(kDriveI);
+        kRightMotor.getPIDController().setD(kDriveD);
     }
 }

@@ -33,7 +33,7 @@ public class DrivetrainCommands {
                     SmartDashboard.putNumber("Turn", turn.getAsDouble());
                     // uses the .drive method from the drivetrain class; multiplying by 0.5 makes it
                     // run at half sped
-                    drivetrain.drive(drive.getAsDouble() * 0.5, turn.getAsDouble() * 0.5);
+                    drivetrain.drive(drive.getAsDouble() * 0.5, turn.getAsDouble() * 0.5, false);
                 },
                 drivetrain);
     }
