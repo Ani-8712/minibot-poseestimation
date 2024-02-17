@@ -37,7 +37,8 @@ public class RobotContainer {
         drivetrain.calibrateGyro();
 
         mainController.buttonA.whileTrue(drivetrainCommands.shoot(() -> 0.7));
-        mainController.buttonX.whileTrue(drivetrainCommands.intakeHandoff(() -> 0.5));
+        mainController.buttonX.whileTrue(
+                drivetrainCommands.faceSpeaker(DriveTrainConstants.kRotController));
         mainController.buttonY.whileTrue(drivetrainCommands.shoot(() -> 1));
 
         /**

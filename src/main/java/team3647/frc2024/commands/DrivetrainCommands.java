@@ -1,5 +1,6 @@
 package team3647.frc2024.commands;
 
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -36,6 +37,46 @@ public class DrivetrainCommands {
                     drivetrain.drive(drive.getAsDouble() * 0.5, turn.getAsDouble() * 0.5, false);
                 },
                 drivetrain);
+    }
+
+    // public Command faceSpeaker(ProfiledPIDController rotController){
+    //     return new Command() {
+    //         double angle;
+    //         @Override
+    //         public void initialize() {
+    //             angle = drivetrain.getAngleToSpeaker();
+    //         }
+
+    //         @Override
+    //         public void execute() {
+
+    //             drivetrain.drive(0, rotController.calculate(drivetrain.getYaw(), angle), false);
+    //         }
+
+    //         @Override
+    //         public boolean isFinished() {
+    //             rotController.setTolerance(10);
+    //             return rotController.atSetpoint();
+    //         }
+
+    //         @Override
+    //         public Set<Subsystem> getRequirements() {
+    //             return Set.of(drivetrain);
+    //         }
+    //     };
+    // }
+
+    public Command faceSpeaker(ProfiledPIDController rotController) {
+        var angle = drivetrain.getAngleToSpeaker();
+        rotController.setTolerance(10);
+        return Commands.run(
+                        () -> {
+                            drivetrain.drive(
+                                    0, rotController.calculate(drivetrain.getYaw(), angle), false);
+                            SmartDashboard.putNumber("bill chills", angle);
+                        },
+                        drivetrain)
+                .until(() -> Math.abs(drivetrain.getYaw() - angle) < 10);
     }
 
     public Command shoot(DoubleSupplier speed) {

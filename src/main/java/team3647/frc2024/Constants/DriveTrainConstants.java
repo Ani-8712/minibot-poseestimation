@@ -3,7 +3,9 @@ package team3647.frc2024.Constants;
 import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
 
@@ -33,7 +35,11 @@ public class DriveTrainConstants {
     public static final DifferentialDriveKinematics kinematics =
             new DifferentialDriveKinematics(kTrackWidth);
 
+    public static final ProfiledPIDController kRotController =
+            new ProfiledPIDController(0.5, 0, 0, new Constraints(0.7, 0.3));
+
     static {
+        kLeftMotor.setInverted(true);
         kRightMotor.setInverted(false);
         kLeftMotor.setIdleMode(IdleMode.kBrake);
         kRightMotor.setIdleMode(IdleMode.kBrake);
@@ -45,5 +51,6 @@ public class DriveTrainConstants {
         kRightMotor.getPIDController().setP(kDriveP);
         kRightMotor.getPIDController().setI(kDriveI);
         kRightMotor.getPIDController().setD(kDriveD);
+        kRotController.enableContinuousInput(-180, 180);
     }
 }
