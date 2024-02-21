@@ -124,11 +124,19 @@ public class Drivetrain implements PeriodicSubsystem {
         var x = periodicIO.odoPose.minus(FieldConstants.kBlueSpeakerPose).getX();
         var y = periodicIO.odoPose.minus(FieldConstants.kBlueSpeakerPose).getY();
         var angle = Math.atan2(y, x);
-        return Units.radiansToDegrees(angle);
+        return Units.radiansToDegrees(angle) + 180;
+    }
+
+    public double getOdoRotReversed(){
+        return (periodicIO.odoPose.getRotation().getDegrees()+180)%360;
     }
 
     public void calibrateGyro() {
         this.gyro.calibrate();
+    }
+
+    public void zeroGyro(){
+        this.gyro.setGyroAngle(IMUAxis.kYaw, this.initialPose.getRotation().getDegrees());
     }
 
     public double getRightDistM() {

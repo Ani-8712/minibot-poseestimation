@@ -72,7 +72,7 @@ public class DrivetrainCommands {
         return Commands.run(
                         () -> {
                             drivetrain.drive(
-                                    0, rotController.calculate(drivetrain.getYaw(), angle), false);
+                                    0, rotController.calculate(drivetrain.getOdoRotReversed(), angle), false);
                             SmartDashboard.putNumber("bill chills", angle);
                         },
                         drivetrain)

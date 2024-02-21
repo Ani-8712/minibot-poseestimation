@@ -35,6 +35,8 @@ public class RobotContainer {
                         mainController::getLeftStickY, mainController::getRightStickX));
 
         drivetrain.calibrateGyro();
+        drivetrain.zeroGyro();
+        
 
         mainController.buttonA.whileTrue(drivetrainCommands.shoot(() -> 0.7));
         mainController.buttonX.whileTrue(
