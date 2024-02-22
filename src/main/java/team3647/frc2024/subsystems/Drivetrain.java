@@ -19,6 +19,8 @@ import edu.wpi.first.wpilibj.ADIS16470_IMU.IMUAxis;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive.WheelSpeeds;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
@@ -121,14 +123,16 @@ public class Drivetrain implements PeriodicSubsystem {
     }
 
     public double getAngleToSpeaker() {
-        var x = periodicIO.odoPose.minus(FieldConstants.kBlueSpeakerPose).getX();
-        var y = periodicIO.odoPose.minus(FieldConstants.kBlueSpeakerPose).getY();
+        var x = FieldConstants.kBlueSpeakerPose.minus(periodicIO.odoPose).getX();
+        var y = FieldConstants.kBlueSpeakerPose.minus(periodicIO.odoPose).getY();
         var angle = Math.atan2(y, x);
-        return Units.radiansToDegrees(angle) + 180;
+        return Units.radiansToDegrees(angle);
     }
 
     public double getOdoRotReversed(){
+        Logger.recordOutput("chill bills", (periodicIO.odoPose.getRotation().getDegrees()+180)%360);
         return (periodicIO.odoPose.getRotation().getDegrees()+180)%360;
+        
     }
 
     public void calibrateGyro() {
@@ -215,6 +219,8 @@ public class Drivetrain implements PeriodicSubsystem {
                 Rotation2d.fromDegrees(getYaw()),
                 new DifferentialDriveWheelPositions(getLeftDistM(), getRightDistM()));
         periodicIO.odoPose = this.estimator.getEstimatedPosition();
+        SmartDashboard.putNumber("d", getOdoRotReversed());
+        SmartDashboard.putNumber("bill chills chills bills", getAngleToSpeaker());
 
         // periodicIO.stdDevsScalar =
         //         GeomUtil.distance(

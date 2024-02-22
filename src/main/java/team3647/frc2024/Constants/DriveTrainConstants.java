@@ -36,7 +36,7 @@ public class DriveTrainConstants {
             new DifferentialDriveKinematics(kTrackWidth);
 
     public static final ProfiledPIDController kRotController =
-            new ProfiledPIDController(0.5, 0, 0, new Constraints(0.7, 0.3));
+            new ProfiledPIDController(0.0625, 0, 0, new Constraints(0.5, 0.7));
 
     static {
         kLeftMotor.setInverted(true);
@@ -51,6 +51,6 @@ public class DriveTrainConstants {
         kRightMotor.getPIDController().setP(kDriveP);
         kRightMotor.getPIDController().setI(kDriveI);
         kRightMotor.getPIDController().setD(kDriveD);
-        kRotController.enableContinuousInput(-180, 180);
+        kRotController.enableContinuousInput(0, 360);
     }
 }

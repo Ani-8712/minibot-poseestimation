@@ -74,6 +74,8 @@ public class DrivetrainCommands {
                             drivetrain.drive(
                                     0, rotController.calculate(drivetrain.getOdoRotReversed(), angle), false);
                             SmartDashboard.putNumber("bill chills", angle);
+                            SmartDashboard.putNumber("chill bills", drivetrain.getOdoRotReversed());
+                            
                         },
                         drivetrain)
                 .until(() -> Math.abs(drivetrain.getYaw() - angle) < 10);
