@@ -1,6 +1,7 @@
 package team3647.frc2024.robot;
 
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import team3647.frc2024.Constants.DriveTrainConstants;
 import team3647.frc2024.commands.DrivetrainCommands;
 import team3647.frc2024.subsystems.Drivetrain;
@@ -40,8 +41,13 @@ public class RobotContainer {
 
         mainController.buttonA.whileTrue(drivetrainCommands.shoot(() -> 0.7));
         mainController.buttonX.whileTrue(
-                drivetrainCommands.faceSpeaker(DriveTrainConstants.kRotController));
-        mainController.buttonY.whileTrue(drivetrainCommands.shoot(() -> 1));
+                drivetrainCommands.faceSpeaker(DriveTrainConstants.kRotController)
+                .until(() -> Math.abs(drivetrain.getAngleToSpeaker() - drivetrain.getOdoRot()) < 0.5))
+                .debounce(0.5);
+
+
+     
+        mainController.dPadUp.onTrue(Commands.runOnce(() -> drivetrain.resetOdometry(), drivetrain));
 
         /**
          * The code below is an example of how to set a command to a button on the controller.

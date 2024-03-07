@@ -27,15 +27,21 @@ import org.littletonrobotics.junction.inputs.LoggableInputs;
 import team3647.frc2024.Constants.DriveTrainConstants;
 import team3647.frc2024.Constants.FieldConstants;
 import team3647.frc2024.util.VisionData;
+import team3647.lib.LimelightHelpers;
 import team3647.lib.PeriodicSubsystem;
 
 /**
- * defines fucntionality for drivetrain, what the drivetrain *can* do. This class impliments
- * periodicSubsystem, which is an abstract class that allows us to consolidate our outputs and
- * inputs into seperate funcitons using writePeriodicOutputs and readPeriodicInputs, which are both
+ * defines fucntionality for drivetrain, what the drivetrain *can* do. This
+ * class impliments
+ * periodicSubsystem, which is an abstract class that allows us to consolidate
+ * our outputs and
+ * inputs into seperate funcitons using writePeriodicOutputs and
+ * readPeriodicInputs, which are both
  * run in Periodic()(a function that runs repeatedly)
  *
- * <p>NOTE: periodicSubsystem is not included in a new project and must be copied from another
+ * <p>
+ * NOTE: periodicSubsystem is not included in a new project and must be copied
+ * from another
  * robot's code.
  */
 public class Drivetrain implements PeriodicSubsystem {
@@ -46,14 +52,13 @@ public class Drivetrain implements PeriodicSubsystem {
 
     private final ADIS16470_IMU gyro;
 
-    private final Pose2d initialPose = new Pose2d(2.71, 6.99, Rotation2d.fromDegrees(180));
+    private final Pose2d initialPose = new Pose2d(2.91, 6.99, Rotation2d.fromDegrees(180));
 
     private final DifferentialDrivePoseEstimator estimator;
     // periodicIO consolidates the measured input and output values
     private final PeriodicIO periodicIO = new PeriodicIO();
 
-    private final AprilTagFieldLayout layout =
-            AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
+    private final AprilTagFieldLayout layout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
 
     public Drivetrain(
             CANSparkMax left,
@@ -66,20 +71,22 @@ public class Drivetrain implements PeriodicSubsystem {
         this.leftController = left.getPIDController();
         this.rightController = right.getPIDController();
 
-        estimator =
-                new DifferentialDrivePoseEstimator(
-                        kinematics,
-                        Rotation2d.fromDegrees(gyro.getAngle(IMUAxis.kYaw)),
-                        getLeftDistM(),
-                        getRightDistM(),
-                        initialPose);
+        estimator = new DifferentialDrivePoseEstimator(
+                kinematics,
+                Rotation2d.fromDegrees(0),
+                getLeftDistM(),
+                getRightDistM(),
+                initialPose);
     }
 
     public void drive(double forward, double rotation, boolean isOpenLoop) {
         /**
-         * wheelspeeds represents the speeds of eaach wheel/motor in a differential drive. it takes
-         * left and right speed arcadeDriveIK creates wheelspeeds with a forward and rotaion
-         * component. it calculates left and right speed by adding rotation to forward for right,
+         * wheelspeeds represents the speeds of eaach wheel/motor in a differential
+         * drive. it takes
+         * left and right speed arcadeDriveIK creates wheelspeeds with a forward and
+         * rotaion
+         * component. it calculates left and right speed by adding rotation to forward
+         * for right,
          * and subtracing rotation from forward for left.
          */
         WheelSpeeds ws = DifferentialDrive.arcadeDriveIK(forward, -rotation, false);
@@ -122,24 +129,38 @@ public class Drivetrain implements PeriodicSubsystem {
         this.estimator.addVisionMeasurement(pose, timestamp, stdDevs);
     }
 
-    public double getAngleToSpeaker() {
-        var x = FieldConstants.kBlueSpeakerPose.minus(periodicIO.odoPose).getX();
-        var y = FieldConstants.kBlueSpeakerPose.minus(periodicIO.odoPose).getY();
-        var angle = Math.atan2(y, x);
-        return Units.radiansToDegrees(angle);
+    public void resetOdometry() {
+        this.estimator.resetPosition(Rotation2d.fromDegrees(0),
+                getRightDistM(),
+                getLeftDistM(), initialPose);
     }
 
-    public double getOdoRotReversed(){
-        Logger.recordOutput("chill bills", (periodicIO.odoPose.getRotation().getDegrees()+180)%360);
-        return (periodicIO.odoPose.getRotation().getDegrees()+180)%360;
-        
+    public double getAngleToPose(Pose2d pose) {
+        var x = periodicIO.odoPose.minus(pose).getX();
+        var y = periodicIO.odoPose.minus(pose).getY();
+
+        var angle = Math.atan2(y, x);
+        return (Units.radiansToDegrees(angle)) % 180;
+    }
+
+    public double getAngleToSpeaker(){
+        return getAngleToPose(FieldConstants.kBlueSpeakerPose);
+    }
+
+    public double getOdoRot() {
+
+        return periodicIO.odoPose.getRotation().getDegrees();
+    }
+
+    public Pose2d getOdoPose() {
+        return periodicIO.odoPose;
     }
 
     public void calibrateGyro() {
         this.gyro.calibrate();
     }
 
-    public void zeroGyro(){
+    public void zeroGyro() {
         this.gyro.setGyroAngle(IMUAxis.kYaw, this.initialPose.getRotation().getDegrees());
     }
 
@@ -185,9 +206,11 @@ public class Drivetrain implements PeriodicSubsystem {
 
     @Override
     public void writePeriodicOutputs() {
-        // setControl() takes a controlRequest Object and applies it's output to the motor
+        // setControl() takes a controlRequest Object and applies it's output to the
+        // motor
         this.leftController.setReference(periodicIO.leftOutput, periodicIO.controlMode);
         this.rightController.setReference(periodicIO.rightOutput, periodicIO.controlMode);
+
     }
 
     @Override
@@ -205,10 +228,8 @@ public class Drivetrain implements PeriodicSubsystem {
         periodicIO.rightCurrent = right.getOutputCurrent();
         periodicIO.avgCurrent = (right.getOutputCurrent() + left.getOutputCurrent()) / 2;
 
-        periodicIO.rightDistM =
-                right.getEncoder().getPosition() * DriveTrainConstants.kMotorRotationsToDistM;
-        periodicIO.leftDistM =
-                left.getEncoder().getPosition() * DriveTrainConstants.kMotorRotationsToDistM;
+        periodicIO.rightDistM = right.getEncoder().getPosition() * DriveTrainConstants.kMotorRotationsToDistM;
+        periodicIO.leftDistM = left.getEncoder().getPosition() * DriveTrainConstants.kMotorRotationsToDistM;
 
         periodicIO.leftNativePos = left.getEncoder().getPosition();
         periodicIO.rightNativePos = right.getEncoder().getPosition();
@@ -219,21 +240,21 @@ public class Drivetrain implements PeriodicSubsystem {
                 Rotation2d.fromDegrees(getYaw()),
                 new DifferentialDriveWheelPositions(getLeftDistM(), getRightDistM()));
         periodicIO.odoPose = this.estimator.getEstimatedPosition();
-        SmartDashboard.putNumber("d", getOdoRotReversed());
+        SmartDashboard.putNumber("dodo", getOdoRot());
         SmartDashboard.putNumber("bill chills chills bills", getAngleToSpeaker());
 
         // periodicIO.stdDevsScalar =
-        //         GeomUtil.distance(
-        //                 this.layout
-        //                         .getTagPose((int) (LimelightHelpers.getFiducialID("")))
-        //                         .get()
-        //                         .toPose2d(),
-        //                 periodicIO.visionPose);
+        // GeomUtil.distance(
+        // this.layout
+        // .getTagPose((int) (LimelightHelpers.getFiducialID("")))
+        // .get()
+        // .toPose2d(),
+        // periodicIO.visionPose);
 
         // addVisionData(LimelightHelpers.getBotPose2d(""),
-        //             periodicIO.timestamp,
-        //             VecBuilder.fill(0.005,0.005, 0.005)
-        //             .times(periodicIO.stdDevsScalar));
+        // periodicIO.timestamp,
+        // VecBuilder.fill(0.005,0.005, 0.005)
+        // .times(periodicIO.stdDevsScalar));
 
         Logger.processInputs("Drive/inputs", periodicIO);
     }
@@ -265,6 +286,7 @@ public class Drivetrain implements PeriodicSubsystem {
             table.put("chill", leftDistM);
             table.put("rigthNativePos", rightNativePos);
             table.put("left nat pos", leftNativePos);
+            table.put("odo rot", odoPose.getRotation().getDegrees());
         }
 
         @Override
@@ -301,6 +323,7 @@ public class Drivetrain implements PeriodicSubsystem {
         public Pose2d odoPose = new Pose2d();
 
         public Pose2d visionPose = new Pose2d();
+
     }
 
     @Override

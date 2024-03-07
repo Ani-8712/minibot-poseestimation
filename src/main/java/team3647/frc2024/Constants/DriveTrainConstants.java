@@ -3,11 +3,14 @@ package team3647.frc2024.Constants;
 import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
+
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
+import edu.wpi.first.wpilibj.AddressableLED;
 
 public class DriveTrainConstants {
     // Declares the 2 motors. the deviceID is the can ID of the device, and can be cheked in Rev
@@ -24,7 +27,7 @@ public class DriveTrainConstants {
 
     public static final double kMotorRotToWheelRot = 12 / 60.0;
 
-    public static final double kDriveP = 0.5;
+    public static final double kDriveP = 6.0;
     public static final double kDriveI = 0;
     public static final double kDriveD = 0;
     public static final double kWheelDiameterM = Units.inchesToMeters(4);
@@ -35,14 +38,18 @@ public class DriveTrainConstants {
     public static final DifferentialDriveKinematics kinematics =
             new DifferentialDriveKinematics(kTrackWidth);
 
-    public static final ProfiledPIDController kRotController =
-            new ProfiledPIDController(0.0625, 0, 0, new Constraints(0.5, 0.7));
+    
+
+    public static final PIDController kRotController =
+            new PIDController(0.015625, 0, 0.0000);
 
     static {
         kLeftMotor.setInverted(true);
         kRightMotor.setInverted(false);
         kLeftMotor.setIdleMode(IdleMode.kBrake);
         kRightMotor.setIdleMode(IdleMode.kBrake);
+        kRightMotor.setSmartCurrentLimit(30);
+        kLeftMotor.setSmartCurrentLimit(30);
 
         kLeftMotor.getPIDController().setP(kDriveP);
         kLeftMotor.getPIDController().setI(kDriveI);
@@ -51,6 +58,8 @@ public class DriveTrainConstants {
         kRightMotor.getPIDController().setP(kDriveP);
         kRightMotor.getPIDController().setI(kDriveI);
         kRightMotor.getPIDController().setD(kDriveD);
-        kRotController.enableContinuousInput(0, 360);
+        kRotController.enableContinuousInput(-180, 180);
+         
+     
     }
 }
