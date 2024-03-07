@@ -6,6 +6,7 @@ import com.revrobotics.SparkPIDController;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -27,6 +28,7 @@ import org.littletonrobotics.junction.inputs.LoggableInputs;
 import team3647.frc2024.Constants.DriveTrainConstants;
 import team3647.frc2024.Constants.FieldConstants;
 import team3647.frc2024.util.VisionData;
+import team3647.lib.GeomUtil;
 import team3647.lib.LimelightHelpers;
 import team3647.lib.PeriodicSubsystem;
 
@@ -240,21 +242,18 @@ public class Drivetrain implements PeriodicSubsystem {
                 Rotation2d.fromDegrees(getYaw()),
                 new DifferentialDriveWheelPositions(getLeftDistM(), getRightDistM()));
         periodicIO.odoPose = this.estimator.getEstimatedPosition();
-        SmartDashboard.putNumber("dodo", getOdoRot());
-        SmartDashboard.putNumber("bill chills chills bills", getAngleToSpeaker());
 
-        // periodicIO.stdDevsScalar =
-        // GeomUtil.distance(
-        // this.layout
-        // .getTagPose((int) (LimelightHelpers.getFiducialID("")))
-        // .get()
-        // .toPose2d(),
-        // periodicIO.visionPose);
+        periodicIO.stdDevsScalar =
+        GeomUtil.distance(
+        FieldConstants.getTagPose((int)(LimelightHelpers.getFiducialID(""))),
+        periodicIO.odoPose);
 
-        // addVisionData(LimelightHelpers.getBotPose2d(""),
-        // periodicIO.timestamp,
-        // VecBuilder.fill(0.005,0.005, 0.005)
-        // .times(periodicIO.stdDevsScalar));
+        
+
+        addVisionData(LimelightHelpers.getBotPose2d_wpiBlue(""),
+        periodicIO.timestamp,
+        VecBuilder.fill(0.005,0.005, 0.005)
+        .times(periodicIO.stdDevsScalar));
 
         Logger.processInputs("Drive/inputs", periodicIO);
     }
