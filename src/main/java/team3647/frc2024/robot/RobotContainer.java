@@ -5,6 +5,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import team3647.frc2024.Constants.DriveTrainConstants;
 import team3647.frc2024.commands.DrivetrainCommands;
 import team3647.frc2024.subsystems.Drivetrain;
+import team3647.frc2024.util.Limelight;
+import team3647.frc2024.util.VisionController;
 import team3647.lib.inputs.Joysticks;
 
 /**
@@ -26,6 +28,10 @@ public class RobotContainer {
 
     private final DrivetrainCommands drivetrainCommands = new DrivetrainCommands(drivetrain);
 
+    public final Limelight limelight = new Limelight("", drivetrain::getOdoPose);
+    public final VisionController controller =
+            new VisionController(drivetrain::addVisionData, limelight);
+
     public RobotContainer() {
         // It is necessary to register all subsysems with the command scheduler, so it knows what
         // they are.
@@ -37,17 +43,22 @@ public class RobotContainer {
 
         drivetrain.calibrateGyro();
 
-        
-
         mainController.buttonA.whileTrue(drivetrainCommands.shoot(() -> 0.7));
-        mainController.buttonX.whileTrue(
-                drivetrainCommands.faceSpeaker(DriveTrainConstants.kRotController)
-                .until(() -> Math.abs(drivetrain.getAngleToSpeaker() - drivetrain.getOdoRot()) < 0.5))
+        mainController
+                .buttonX
+                .whileTrue(
+                        drivetrainCommands
+                                .faceSpeaker(DriveTrainConstants.kRotController)
+                                .until(
+                                        () ->
+                                                Math.abs(
+                                                                drivetrain.getAngleToSpeaker()
+                                                                        - drivetrain.getOdoRot())
+                                                        < 0.5))
                 .debounce(0.5);
 
-
-     
-        mainController.dPadUp.onTrue(Commands.runOnce(() -> drivetrain.resetOdometry(), drivetrain));
+        mainController.dPadUp.onTrue(
+                Commands.runOnce(() -> drivetrain.resetOdometry(), drivetrain));
 
         /**
          * The code below is an example of how to set a command to a button on the controller.

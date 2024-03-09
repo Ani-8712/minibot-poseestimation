@@ -3,14 +3,10 @@ package team3647.frc2024.Constants;
 import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
-
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
-import edu.wpi.first.wpilibj.AddressableLED;
 
 public class DriveTrainConstants {
     // Declares the 2 motors. the deviceID is the can ID of the device, and can be cheked in Rev
@@ -38,10 +34,7 @@ public class DriveTrainConstants {
     public static final DifferentialDriveKinematics kinematics =
             new DifferentialDriveKinematics(kTrackWidth);
 
-    
-
-    public static final PIDController kRotController =
-            new PIDController(0.015625, 0, 0.0000);
+    public static final PIDController kRotController = new PIDController(0.015625, 0, 0.0000);
 
     static {
         kLeftMotor.setInverted(true);
@@ -59,7 +52,5 @@ public class DriveTrainConstants {
         kRightMotor.getPIDController().setI(kDriveI);
         kRightMotor.getPIDController().setD(kDriveD);
         kRotController.enableContinuousInput(-180, 180);
-         
-     
     }
 }

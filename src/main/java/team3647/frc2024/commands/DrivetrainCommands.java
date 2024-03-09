@@ -2,29 +2,19 @@ package team3647.frc2024.commands;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-
 import java.util.Set;
 import java.util.function.DoubleSupplier;
-
-import org.littletonrobotics.junction.Logger;
-
 import team3647.frc2024.subsystems.Drivetrain;
 
 /**
- * We use the commands class to define everything we are *going* to do with the
- * subystem. For
- * example, in a cube shooter, we define methods to run the rollers and wrist in
- * the subsystem, then
- * we use these methods to set specific values and setpoints in the commands.
- * For more info on
- * commands, see
- * https://docs.wpilib.org/en/stable/docs/software/commandbased/commands.html
+ * We use the commands class to define everything we are *going* to do with the subystem. For
+ * example, in a cube shooter, we define methods to run the rollers and wrist in the subsystem, then
+ * we use these methods to set specific values and setpoints in the commands. For more info on
+ * commands, see https://docs.wpilib.org/en/stable/docs/software/commandbased/commands.html
  */
 public class DrivetrainCommands {
 
@@ -35,12 +25,9 @@ public class DrivetrainCommands {
     }
 
     /**
-     * doubleSuppliers are functions that return doubles, and their values are
-     * continuouisly called.
-     * If we used doubles, we would only be able to pass in one value for the whole
-     * time the command
-     * is active, so the value of the joystick when the command is initialized would
-     * be the speed
+     * doubleSuppliers are functions that return doubles, and their values are continuouisly called.
+     * If we used doubles, we would only be able to pass in one value for the whole time the command
+     * is active, so the value of the joystick when the command is initialized would be the speed
      * the whole time.
      */
     public Command drive(DoubleSupplier drive, DoubleSupplier turn) {
@@ -67,16 +54,16 @@ public class DrivetrainCommands {
             @Override
             public void execute() {
 
-                var demand = rotController.calculate(angle -  drivetrain.getOdoRot());
-                drivetrain.drive(
-                        0, demand, false);
+                var demand = rotController.calculate(angle - drivetrain.getOdoRot());
+                drivetrain.drive(0, demand, false);
                 // Logger.recordOutput("pid output", demand);
-                // Logger.recordOutput("angle pose2d", new Pose2d(drivetrain.getOdoPose().getTranslation(),
+                // Logger.recordOutput("angle pose2d", new
+                // Pose2d(drivetrain.getOdoPose().getTranslation(),
                 //         Rotation2d.fromDegrees(angle)));
                 // Logger.recordOutput("angle tospeaker", angle);
                 // Logger.recordOutput("atGoal?", rotController.atSetpoint());
                 // Logger.recordOutput("angle", angle);
-                
+
             }
 
             @Override
@@ -91,14 +78,13 @@ public class DrivetrainCommands {
         };
     }
 
-
-    public Command faceAngle(double angle, ProfiledPIDController controller){
-        return Commands.run(() -> {
-              var rallingralls = controller.calculate(angle - drivetrain.getOdoRot());
-                drivetrain.drive(
-                        0, rallingralls, false);
-
-        }, drivetrain);
+    public Command faceAngle(double angle, ProfiledPIDController controller) {
+        return Commands.run(
+                () -> {
+                    var rallingralls = controller.calculate(angle - drivetrain.getOdoRot());
+                    drivetrain.drive(0, rallingralls, false);
+                },
+                drivetrain);
     }
 
     // public Command faceSpeaker(Profile   dPIDController rotController) {
