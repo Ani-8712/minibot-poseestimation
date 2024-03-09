@@ -28,8 +28,12 @@ public class Limelight implements AprilTagCamera {
 
         double timestamp = Timer.getFPGATimestamp() - LimelightHelpers.getLatency_Pipeline(name);
         double distFromTag = GeomUtil.distance(result, odoPose.get());
-        double stdDevsScalar = distFromTag + getNumberOfTargets() * 100;
+        double stdDevsScalar = distFromTag + getNumberOfTargets() / 100;
         var stdDevs = baseStdDevs.times(stdDevsScalar);
+
+        if (distFromTag >= 5) {
+            return Optional.empty();
+        }
 
         VisionData data = new VisionData(result, timestamp, stdDevs);
         return Optional.of(data);
