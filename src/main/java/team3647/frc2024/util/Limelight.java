@@ -1,8 +1,11 @@
 package team3647.frc2024.util;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Timer;
@@ -15,24 +18,47 @@ public class Limelight implements AprilTagCamera {
     private final String name;
     private final Matrix<N3, N1> baseStdDevs;
     private final Supplier<Pose2d> odoPose;
+    AprilTagFieldLayout layout;
 
     public Limelight(String limelightName, Supplier<Pose2d> odoPose) {
         this.name = limelightName;
         this.baseStdDevs = VecBuilder.fill(0.05, 0.05, 0.05);
         this.odoPose = odoPose;
+        layout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
     }
 
     @Override
     public Optional<VisionData> queueToInputs() {
-        var result = LimelightHelpers.getBotPose2d(name);
+        var result = LimelightHelpers.getBotPose3d_wpiBlue(name);
+
+        // no more (vertical) pose ambiguity!!! yaaay!!!!!!
+        // if(result.getZ() > 0){
+        //     return Optional.empty();
+        // }
+        // this is commented out cuz my limelight is just hanging aroudnd rn
+        // uncomment after real ll mont done/ specs set in web interface
 
         double timestamp = Timer.getFPGATimestamp() - LimelightHelpers.getLatency_Pipeline(name);
-        double distFromTag = GeomUtil.distance(result, odoPose.get());
-        double stdDevsScalar = distFromTag + getNumberOfTargets() * 100;
-        var stdDevs = baseStdDevs.times(stdDevsScalar);
 
-        VisionData data = new VisionData(result, timestamp, stdDevs);
+        double distFromTag = GeomUtil.distance(result.toPose2d(), getTagPose().toPose2d());
+        double stdDevsScalar = distFromTag + getNumberOfTargets() * 100;
+        var stdDevs = baseStdDevs;
+        // .times(stdDevsScalar);
+
+        VisionData data = new VisionData(result.toPose2d(), timestamp, stdDevs);
         return Optional.of(data);
+    }
+
+    public Pose3d getTagPose() {
+        Optional<Pose3d> tagposeMabye =
+                layout.getTagPose((int) (LimelightHelpers.getFiducialID(name)));
+
+        Pose3d tagpose = new Pose3d();
+        if (tagposeMabye.isPresent()) {
+            tagpose = tagposeMabye.get();
+        }
+
+        return tagpose;
     }
 
     public int getNumberOfTargets() {

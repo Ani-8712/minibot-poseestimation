@@ -121,7 +121,7 @@ public class Drivetrain implements PeriodicSubsystem {
 
     public void resetOdometry() {
         this.estimator.resetPosition(
-                Rotation2d.fromDegrees(0), getRightDistM(), getLeftDistM(), initialPose);
+                Rotation2d.fromDegrees(0), getLeftDistM(), getRightDistM(), initialPose);
     }
 
     public double getAngleToPose(Pose2d pose) {
@@ -225,6 +225,11 @@ public class Drivetrain implements PeriodicSubsystem {
         periodicIO.rightNativePos = right.getEncoder().getPosition();
 
         periodicIO.timestamp = Timer.getFPGATimestamp();
+
+        this.estimator.update(
+                Rotation2d.fromDegrees(periodicIO.yaw), getLeftDistM(), getRightDistM());
+
+        periodicIO.odoPose = this.estimator.getEstimatedPosition();
 
         Logger.processInputs("Drive/inputs", periodicIO);
     }
