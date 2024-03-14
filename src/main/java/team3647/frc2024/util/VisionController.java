@@ -19,10 +19,10 @@ public class VisionController extends VirtualSubsystem {
     public void periodic() {
         var inputs = camera.queueToInputs();
 
-        if (inputs.isEmpty()) {
-            return;
-        }
-
-        addVisionData.accept(inputs.get());
+        inputs.ifPresent(
+                (data) -> {
+                    addVisionData.accept(data);
+                    dataList.add(data);
+                });
     }
 }

@@ -38,7 +38,7 @@ public class Limelight implements AprilTagCamera {
         // this is commented out cuz my limelight is just hanging aroudnd rn
         // uncomment after real ll mont done/ specs set in web interface
 
-        double timestamp = Timer.getFPGATimestamp() - LimelightHelpers.getLatency_Pipeline(name);
+        double timestamp = Timer.getFPGATimestamp() - (LimelightHelpers.getLatency_Pipeline(name)) / 1000.0;
 
         double distFromTag = GeomUtil.distance(result.toPose2d(), getTagPose().toPose2d());
         double stdDevsScalar = distFromTag + getNumberOfTargets() * 100;
