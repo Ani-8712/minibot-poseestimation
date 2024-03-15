@@ -2,6 +2,8 @@ package team3647.frc2024.util;
 
 import java.util.ArrayList;
 import java.util.function.Consumer;
+
+import team3647.lib.GeomUtil;
 import team3647.lib.team6328.VirtualSubsystem;
 
 public class VisionController extends VirtualSubsystem {
@@ -18,11 +20,18 @@ public class VisionController extends VirtualSubsystem {
     @Override
     public void periodic() {
         var inputs = camera.queueToInputs();
+        var lastInput = dataList.get(dataList.size()-1);
 
-        inputs.ifPresent(
-                (data) -> {
-                    addVisionData.accept(data);
-                    dataList.add(data);
-                });
+        if(inputs.isEmpty()){
+            return;
+        }
+        var balls = inputs.get().pose.minus(lastInput.pose);
+        if(GeomUtil.distance(balls) > 2 && Math.abs(inputs.get().timestamp-lastInput.timestamp) < 4.0){
+            return;
+        }
+
+        addVisionData.accept(inputs.get());
+        dataList.add(inputs.get());
+
     }
 }

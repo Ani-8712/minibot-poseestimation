@@ -12,7 +12,7 @@ import team3647.frc2024.subsystems.Drivetrain;
 
 /**
  * We use the commands class to define everything we are *going* to do with the subystem. For
- * example, in a cube shooter, we define methods to run the rollers and wrist in the subsystem, then
+ * example, in a shooter, we define methods to run the rollers in the subsystem, then
  * we use these methods to set specific values and setpoints in the commands. For more info on
  * commands, see https://docs.wpilib.org/en/stable/docs/software/commandbased/commands.html
  */

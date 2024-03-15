@@ -31,19 +31,21 @@ public class Limelight implements AprilTagCamera {
     public Optional<VisionData> queueToInputs() {
         var result = LimelightHelpers.getBotPose3d_wpiBlue(name);
 
-        // no more (vertical) pose ambiguity!!! yaaay!!!!!!
-        // if(result.getZ() > 0){
-        //     return Optional.empty();
-        // }
-        // this is commented out cuz my limelight is just hanging aroudnd rn
-        // uncomment after real ll mont done/ specs set in web interface
+        if(result.equals(new Pose3d())){
+            return Optional.empty();
+        }
+
+
+        if(result.getZ() > 0){
+            return Optional.empty();
+        }
 
         double timestamp = Timer.getFPGATimestamp() - (LimelightHelpers.getLatency_Pipeline(name)) / 1000.0;
 
         double distFromTag = GeomUtil.distance(result.toPose2d(), getTagPose().toPose2d());
-        double stdDevsScalar = distFromTag + getNumberOfTargets() * 100;
-        var stdDevs = baseStdDevs;
-        // .times(stdDevsScalar);
+        double stdDevsScalar = distFromTag/getNumberOfTargets() * 100;
+        var stdDevs = baseStdDevs
+        .times(stdDevsScalar);
 
         VisionData data = new VisionData(result.toPose2d(), timestamp, stdDevs);
         return Optional.of(data);
