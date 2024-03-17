@@ -7,7 +7,6 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
-import edu.wpi.first.math.estimator.SteadyStateKalmanFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
@@ -124,7 +123,9 @@ public class Drivetrain implements PeriodicSubsystem {
 
     public void resetOdometry() {
         this.estimator.resetPosition(
-                Rotation2d.fromDegrees(0), getLeftDistM(), getRightDistM(), 
+                Rotation2d.fromDegrees(0),
+                getLeftDistM(),
+                getRightDistM(),
                 periodicIO.visionPose.equals(new Pose2d()) ? initialPose : periodicIO.visionPose);
     }
 

@@ -12,9 +12,9 @@ import team3647.frc2024.subsystems.Drivetrain;
 
 /**
  * We use the commands class to define everything we are *going* to do with the subystem. For
- * example, in a shooter, we define methods to run the rollers in the subsystem, then
- * we use these methods to set specific values and setpoints in the commands. For more info on
- * commands, see https://docs.wpilib.org/en/stable/docs/software/commandbased/commands.html
+ * example, in a shooter, we define methods to run the rollers in the subsystem, then we use these
+ * methods to set specific values and setpoints in the commands. For more info on commands, see
+ * https://docs.wpilib.org/en/stable/docs/software/commandbased/commands.html
  */
 public class DrivetrainCommands {
 
@@ -37,7 +37,7 @@ public class DrivetrainCommands {
                     SmartDashboard.putNumber("Turn", turn.getAsDouble());
                     // uses the .drive method from the drivetrain class; multiplying by 0.5 makes it
                     // run at half sped
-                    drivetrain.drive(drive.getAsDouble() * 0.5, turn.getAsDouble() * 0.5, false);
+                    drivetrain.drive(drive.getAsDouble() , turn.getAsDouble(), false);
                 },
                 drivetrain);
     }

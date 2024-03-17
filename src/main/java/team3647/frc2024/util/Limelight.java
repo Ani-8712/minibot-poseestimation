@@ -31,22 +31,20 @@ public class Limelight implements AprilTagCamera {
     public Optional<VisionData> queueToInputs() {
         var result = LimelightHelpers.getBotPose3d_wpiBlue(name);
 
-        if(result.equals(new Pose3d())){
+        if (result.equals(new Pose3d())) {
             return Optional.empty();
         }
 
-
-        if(result.getZ() > 0){
+        if (result.getZ() > 0.3) {
             return Optional.empty();
         }
 
-        double timestamp = Timer.getFPGATimestamp() - (LimelightHelpers.getLatency_Pipeline(name)) / 1000.0;
+        double timestamp =
+                Timer.getFPGATimestamp() - (LimelightHelpers.getLatency_Pipeline(name)) / 1000.0;
 
         double distFromTag = GeomUtil.distance(result.toPose2d(), getTagPose().toPose2d());
-        double stdDevsScalar = distFromTag/getNumberOfTargets() * 100;
-        var stdDevs = baseStdDevs
-        .times(stdDevsScalar);
-
+        double stdDevsScalar = distFromTag / (getNumberOfTargets() * 100);
+        var stdDevs = baseStdDevs.times(stdDevsScalar);
         VisionData data = new VisionData(result.toPose2d(), timestamp, stdDevs);
         return Optional.of(data);
     }
